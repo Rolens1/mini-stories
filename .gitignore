@@ -1,0 +1,48 @@
+# Supabase
+supabase/.env*
+supabase/.output/
+supabase/.temp/
+supabase/.supabase/
+supabase/functions/node_modules/
+supabase/functions/.next/
+supabase/functions/.output/
+apps/api/.pnpm-store/
+# Node
+node_modules/
+*.log
+dist/
+.env*
+.env.local
+.env.*.local
+
+# API (NestJS)
+# API (NestJS)
+apps/api/dist/
+apps/api/.pnpm/
+apps/api/node_modules/
+apps/api/.env*
+apps/api/coverage/
+apps/api/.turbo/
+
+# Web (Next.js)
+apps/web/.next/
+apps/web/node_modules/
+apps/web/.env*
+apps/web/out/
+apps/web/coverage/
+apps/web/.turbo/
+
+# Mobile (Expo)
+apps/mobile/node_modules/
+apps/mobile/.expo/
+apps/mobile/.expo-shared/
+apps/mobile/.env*
+apps/mobile/coverage/
+apps/mobile/.turbo/
+apps/mobile/.vscode/
+apps/mobile/.DS_Store
+apps/mobile/web-build/
+
+# OS
+.DS_Store
+Thumbs.db
