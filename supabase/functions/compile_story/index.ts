@@ -22,6 +22,13 @@ const STORIES_BUCKET = Deno.env.get("SUPA_STORIES_BUCKET") ?? "stories-md";
 // OpenAI model (you can override in project secrets)
 const OPENAI_MODEL = Deno.env.get("OPENAI_MODEL") ?? "gpt-4o-mini";
 
+
+// Caps on usage per user (to limit costs)
+const MAX_COMPILES = 2;
+const MAX_TOKENS   = 15000;
+
+
+
 // ---------- Utils ----------
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -53,6 +60,8 @@ serve(async (req) => {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return json({ error: "Missing Supabase envs" }, 500);
   if (!OPENAI_API_KEY) return json({ error: "Missing OPENAI_API_KEY" }, 500);
 
+  
+
   try {
     // Forward caller's JWT so RLS applies
     const authHeader = req.headers.get("Authorization") ?? "";
@@ -71,6 +80,21 @@ serve(async (req) => {
     const style = payload?.style ?? "Cozy";
     const persona = payload?.persona ?? null;
     const titleOverride = payload?.title ?? null;
+    const { data: usageRow, error: usageErr } = await supabase.rpc('get_usage_today');
+    if (usageErr) {
+      return json({ error: `usage check failed: ${usageErr.message}` }, 500);
+    }
+    const usedCompiles = usageRow?.compiles ?? 0;
+    const usedTokens   = usageRow?.tokens ?? 0;
+
+    // 2) block if over cap
+    if (usedCompiles >= MAX_COMPILES || usedTokens >= MAX_TOKENS) {
+      return json({
+        error: "Daily limit reached",
+        detail: `Free plan: max ${MAX_COMPILES} compiles and ${MAX_TOKENS} tokens per day. Try again tomorrow or upgrade.`,
+        today: { compiles: usedCompiles, tokens: usedTokens }
+      }, 429);
+    }
 
     if (!isISODate(from) || !isISODate(to)) {
       return json({ error: "Bad range: 'from' and 'to' must be YYYY-MM-DD" }, 400);
@@ -179,6 +203,7 @@ Constraints: 600–900 words, PG-13 tone, cohesive narrative.`;
       cost_cents,
       status: "ready",
     };
+    await supabase.rpc('bump_usage', { _tokens: tokens, _cost_cents: cost_cents }).catch(() => {});
 
     const ins = await supabase.from("stories").insert(insertPayload);
     if (ins.error && ins.error.code !== "23505") {
