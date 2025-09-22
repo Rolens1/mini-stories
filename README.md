@@ -10,7 +10,7 @@ Here’s the revised `README.md` you can drop at the root:
 A cross-platform journaling app (web + mobile) where users write **one sentence a day** and later compile them into **AI-generated stories**.  
 Powered by **Supabase** (Auth, DB, Storage, Edge Functions) and **OpenAI** for story generation.
 
-Live (web): https://mini-stories.onrender.com
+Live (web): https://mini-stories-web.onrender.com
 
 ---
 

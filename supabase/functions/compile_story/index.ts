@@ -137,14 +137,23 @@ serve(async (req) => {
 Output Markdown strictly with:
 # Title
 ## Blurb
-## Chapters (3–5), each 4–6 sentences
+## Chapters (3–4), with the last chapter being a reflection on the entire journey.
 ## Closing line echoing the first entry.`;
 
     const userMsg = `Date range: ${from} – ${to}
 Daily notes:
 ${bulletList}
 
-Constraints: 600–900 words, PG-13 tone, cohesive narrative.`;
+Constraints: 400-500 words, PG-13 tone, cohesive narrative.
+But also, if there are fewer than 3 entries, make it a short story under 300 words.
+If some entries are very short, expand them with creative details.
+
+Make the story heartfelt and engaging. Use vivid descriptions and emotional depth.
+Incorporate any recurring themes or motifs from the entries.
+Do not mention the dates or that these were once daily notes.
+Do not add a table of contents or any extra sections.
+Do not use asterisks or other markdown besides headings and paragraphs.
+Do not make up extra quotes or dialogue.`;
 
     // OpenAI via fetch (SDK-free, no .create issues)
     const r = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -203,7 +212,11 @@ Constraints: 600–900 words, PG-13 tone, cohesive narrative.`;
       cost_cents,
       status: "ready",
     };
-    await supabase.rpc('bump_usage', { _tokens: tokens, _cost_cents: cost_cents }).catch(() => {});
+    try {
+      await supabase.rpc('bump_usage', { _tokens: tokens, _cost_cents: cost_cents });
+    } catch (err) {
+      console.error("bump_usage RPC failed", err);
+    }
 
     const ins = await supabase.from("stories").insert(insertPayload);
     if (ins.error && ins.error.code !== "23505") {
